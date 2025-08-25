@@ -10,6 +10,7 @@ public class GuidService {
     
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
     private static final String DEFAULT_SERVER_ID = "SV01";
+    private static final int MAX_COUNTER = 10000;
     private final AtomicInteger counter = new AtomicInteger(0);
     private final String serverId;
     private final String processId;
@@ -23,13 +24,8 @@ public class GuidService {
         // Timestamp (17 digits) - millisecond precision
         String timestamp = generateTimestamp();
         
-        // Counter (4 digits)
-        int count = counter.getAndIncrement();
-        if (count >= 10000) {
-            counter.compareAndSet(count, 0);
-            count = count % 10000;
-        }
-        String counterStr = String.format("%04d", count);
+        // Counter (4 digits) with automatic overflow handling
+        String counterStr = generateCounter();
         
         return timestamp + serverId + processId + counterStr;
     }
@@ -53,5 +49,10 @@ public class GuidService {
     private String initializeProcessId() {
         long pid = ProcessHandle.current().pid();
         return String.format("%05d", pid % 100000);
+    }
+    
+    private String generateCounter() {
+        int count = counter.getAndUpdate(current -> (current + 1) % MAX_COUNTER);
+        return String.format("%04d", count);
     }
 }
