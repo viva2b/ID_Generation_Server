@@ -8,8 +8,10 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class SequenceService {
     
+    private static final String KEY_PREFIX = "seq:";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    
     private final RedisTemplate<String, String> redisTemplate;
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
     
     public SequenceService(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -34,7 +36,10 @@ public class SequenceService {
     }
     
     private String getSequenceKey() {
-        String date = LocalDate.now().format(dateFormatter);
-        return "seq:" + date;
+        return generateDailyKey(LocalDate.now());
+    }
+    
+    private String generateDailyKey(LocalDate date) {
+        return KEY_PREFIX + date.format(DATE_FORMATTER);
     }
 }
