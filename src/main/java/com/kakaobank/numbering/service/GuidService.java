@@ -12,18 +12,16 @@ public class GuidService {
     private static final String DEFAULT_SERVER_ID = "SV01";
     private final AtomicInteger counter = new AtomicInteger(0);
     private final String serverId;
+    private final String processId;
     
     public GuidService() {
         this.serverId = initializeServerId();
+        this.processId = initializeProcessId();
     }
     
     public String generateGuid() {
         // Timestamp (17 digits) - millisecond precision
         String timestamp = generateTimestamp();
-
-        // Process ID (5 digits)
-        long pid = ProcessHandle.current().pid();
-        String processId = String.format("%05d", pid % 100000);
         
         // Counter (4 digits)
         int count = counter.getAndIncrement();
@@ -50,5 +48,10 @@ public class GuidService {
             return String.format("%-4s", envServerId).substring(0, 4);
         }
         return DEFAULT_SERVER_ID;
+    }
+    
+    private String initializeProcessId() {
+        long pid = ProcessHandle.current().pid();
+        return String.format("%05d", pid % 100000);
     }
 }
