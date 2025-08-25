@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: numbering-api
+    
+  redis:
+    host: ${SPRING_REDIS_HOST:localhost}
+    port: ${SPRING_REDIS_PORT:6379}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 5
+        min-idle: 2
+        max-wait: 1000ms
+
+server:
+  port: 8080
+  
+# Logging
+logging:
+  level:
+    com.kakaobank: DEBUG
+    org.springframework.data.redis: INFO
