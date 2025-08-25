@@ -1,5 +1,6 @@
 package com.kakaobank.numbering.service;
 
+import com.kakaobank.numbering.exception.GuidGenerationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -68,7 +69,7 @@ public class GuidService {
     
     private void validateGuidFormat(String guid) {
         if (guid == null || guid.length() != 30) {
-            throw new IllegalStateException("Invalid GUID format: expected 30 characters, got " + 
+            throw new GuidGenerationException("Invalid GUID format: expected 30 characters, got " + 
                 (guid == null ? "null" : guid.length()));
         }
     }

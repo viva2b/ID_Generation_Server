@@ -1,5 +1,7 @@
 package com.kakaobank.numbering.service;
 
+import com.kakaobank.numbering.exception.RedisOperationException;
+import com.kakaobank.numbering.exception.SequenceGenerationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.RedisConnectionFailureException;
@@ -42,10 +44,10 @@ public class SequenceService {
             
         } catch (RedisConnectionFailureException e) {
             log.error("Redis connection failed while generating sequence", e);
-            throw new RuntimeException("Unable to generate sequence: Redis connection failed", e);
+            throw new RedisOperationException("Unable to generate sequence: Redis connection failed", e);
         } catch (Exception e) {
             log.error("Unexpected error while generating sequence", e);
-            throw new RuntimeException("Unable to generate sequence", e);
+            throw new SequenceGenerationException("Unable to generate sequence", e);
         }
     }
     
@@ -57,10 +59,10 @@ public class SequenceService {
     
     private void validateSequenceRange(Long sequence) {
         if (sequence == null) {
-            throw new IllegalStateException("Failed to generate sequence");
+            throw new SequenceGenerationException("Failed to generate sequence");
         }
         if (sequence > MAX_SEQUENCE_VALUE) {
-            throw new IllegalStateException(
+            throw new SequenceGenerationException(
                 String.format("Sequence exceeded maximum value: %d (max: %d)", 
                     sequence, MAX_SEQUENCE_VALUE));
         }
