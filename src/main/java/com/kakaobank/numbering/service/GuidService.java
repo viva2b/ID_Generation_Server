@@ -1,5 +1,8 @@
 package com.kakaobank.numbering.service;
 
+import com.kakaobank.numbering.exception.GuidGenerationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -8,31 +11,66 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class GuidService {
     
+    private static final Logger log = LoggerFactory.getLogger(GuidService.class);
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+    private static final String DEFAULT_SERVER_ID = "SV01";
+    private static final int MAX_COUNTER = 10000;
     private final AtomicInteger counter = new AtomicInteger(0);
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+    private final String serverId;
+    private final String processId;
+    
+    public GuidService() {
+        this.serverId = initializeServerId();
+        this.processId = initializeProcessId();
+        log.info("GuidService initialized - ServerId: {}, ProcessId: {}", serverId, processId);
+    }
     
     public String generateGuid() {
-        // Timestamp (17 digits)
-        String timestamp = LocalDateTime.now().format(formatter);
+        // Timestamp (17 digits) - millisecond precision
+        String timestamp = generateTimestamp();
         
-        // Server ID (4 digits)
-        String serverId = System.getenv("SERVER_ID");
-        if (serverId == null || serverId.isEmpty()) {
-            serverId = "SV01";
+        // Counter (4 digits) with automatic overflow handling
+        String counterStr = generateCounter();
+        
+        String guid = timestamp + serverId + processId + counterStr;
+        
+        // Validate GUID format (30 characters)
+        validateGuidFormat(guid);
+        
+        log.debug("Generated GUID: {}", guid);
+        return guid;
+    }
+    
+    private String generateTimestamp() {
+        LocalDateTime now = LocalDateTime.now();
+        return now.format(TIMESTAMP_FORMATTER);
+    }
+    
+    private String initializeServerId() {
+        String envServerId = System.getenv("SERVER_ID");
+        if (envServerId != null && !envServerId.trim().isEmpty()) {
+            if (envServerId.length() == 4) {
+                return envServerId;
+            }
+            return String.format("%-4s", envServerId).substring(0, 4);
         }
-        
-        // Process ID (5 digits)
+        return DEFAULT_SERVER_ID;
+    }
+    
+    private String initializeProcessId() {
         long pid = ProcessHandle.current().pid();
-        String processId = String.format("%05d", pid % 100000);
-        
-        // Counter (4 digits)
-        int count = counter.getAndIncrement();
-        if (count >= 10000) {
-            counter.compareAndSet(count, 0);
-            count = count % 10000;
+        return String.format("%05d", pid % 100000);
+    }
+    
+    private String generateCounter() {
+        int count = counter.getAndUpdate(current -> (current + 1) % MAX_COUNTER);
+        return String.format("%04d", count);
+    }
+    
+    private void validateGuidFormat(String guid) {
+        if (guid == null || guid.length() != 30) {
+            throw new GuidGenerationException("Invalid GUID format: expected 30 characters, got " + 
+                (guid == null ? "null" : guid.length()));
         }
-        String counterStr = String.format("%04d", count);
-        
-        return timestamp + serverId + processId + counterStr;
     }
 }
