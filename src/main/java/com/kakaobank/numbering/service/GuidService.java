@@ -8,12 +8,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class GuidService {
     
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
     private final AtomicInteger counter = new AtomicInteger(0);
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
     
     public String generateGuid() {
-        // Timestamp (17 digits)
-        String timestamp = LocalDateTime.now().format(formatter);
+        // Timestamp (17 digits) - millisecond precision
+        String timestamp = generateTimestamp();
         
         // Server ID (4 digits)
         String serverId = System.getenv("SERVER_ID");
@@ -34,5 +34,10 @@ public class GuidService {
         String counterStr = String.format("%04d", count);
         
         return timestamp + serverId + processId + counterStr;
+    }
+    
+    private String generateTimestamp() {
+        LocalDateTime now = LocalDateTime.now();
+        return now.format(TIMESTAMP_FORMATTER);
     }
 }
