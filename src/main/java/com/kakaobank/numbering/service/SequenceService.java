@@ -1,5 +1,8 @@
 package com.kakaobank.numbering.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
@@ -11,6 +14,7 @@ import java.time.Duration;
 @Service
 public class SequenceService {
     
+    private static final Logger log = LoggerFactory.getLogger(SequenceService.class);
     private static final String KEY_PREFIX = "seq:";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final long MAX_SEQUENCE_VALUE = 9_999_999_999L;
@@ -23,15 +27,26 @@ public class SequenceService {
     
     public Long generateSequence() {
         String key = getSequenceKey();
-        Long sequence = performAtomicIncrement(key);
         
-        validateSequenceRange(sequence);
-        
-        if (sequence == 1L) {
-            setDailyExpiration(key);
+        try {
+            Long sequence = performAtomicIncrement(key);
+            
+            validateSequenceRange(sequence);
+            
+            if (sequence == 1L) {
+                setDailyExpiration(key);
+            }
+            
+            log.debug("Generated sequence: {} for key: {}", sequence, key);
+            return sequence;
+            
+        } catch (RedisConnectionFailureException e) {
+            log.error("Redis connection failed while generating sequence", e);
+            throw new RuntimeException("Unable to generate sequence: Redis connection failed", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while generating sequence", e);
+            throw new RuntimeException("Unable to generate sequence", e);
         }
-        
-        return sequence;
     }
     
     private void setDailyExpiration(String key) {
