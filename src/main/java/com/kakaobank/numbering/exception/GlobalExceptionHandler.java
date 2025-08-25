@@ -16,6 +16,24 @@ public class GlobalExceptionHandler {
     
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
+    @ExceptionHandler(SequenceGenerationException.class)
+    public ResponseEntity<Map<String, Object>> handleSequenceGenerationException(SequenceGenerationException e) {
+        log.error("Sequence generation failed", e);
+        return createErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+    
+    @ExceptionHandler(GuidGenerationException.class)
+    public ResponseEntity<Map<String, Object>> handleGuidGenerationException(GuidGenerationException e) {
+        log.error("GUID generation failed", e);
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+    
+    @ExceptionHandler(RedisOperationException.class)
+    public ResponseEntity<Map<String, Object>> handleRedisOperationException(RedisOperationException e) {
+        log.error("Redis operation failed", e);
+        return createErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, "Database operation failed");
+    }
+    
     @ExceptionHandler(RedisConnectionFailureException.class)
     public ResponseEntity<Map<String, Object>> handleRedisConnectionFailure(RedisConnectionFailureException e) {
         log.error("Redis connection failed", e);
