@@ -19,7 +19,7 @@ public class SequenceService {
     
     public Long generateSequence() {
         String key = getSequenceKey();
-        Long sequence = redisTemplate.opsForValue().increment(key);
+        Long sequence = performAtomicIncrement(key);
         
         // 범위 체크 (1 ~ 9,999,999,999)
         if (sequence != null && sequence > 9999999999L) {
@@ -27,6 +27,10 @@ public class SequenceService {
         }
         
         return sequence;
+    }
+    
+    private Long performAtomicIncrement(String key) {
+        return redisTemplate.opsForValue().increment(key);
     }
     
     public Long getCurrentSequence() {
