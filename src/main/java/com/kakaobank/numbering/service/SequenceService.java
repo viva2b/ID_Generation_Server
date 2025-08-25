@@ -10,6 +10,7 @@ public class SequenceService {
     
     private static final String KEY_PREFIX = "seq:";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final long MAX_SEQUENCE_VALUE = 9_999_999_999L;
     
     private final RedisTemplate<String, String> redisTemplate;
     
@@ -21,12 +22,20 @@ public class SequenceService {
         String key = getSequenceKey();
         Long sequence = performAtomicIncrement(key);
         
-        // 범위 체크 (1 ~ 9,999,999,999)
-        if (sequence != null && sequence > 9999999999L) {
-            throw new IllegalStateException("Sequence exceeded maximum value: " + sequence);
-        }
+        validateSequenceRange(sequence);
         
         return sequence;
+    }
+    
+    private void validateSequenceRange(Long sequence) {
+        if (sequence == null) {
+            throw new IllegalStateException("Failed to generate sequence");
+        }
+        if (sequence > MAX_SEQUENCE_VALUE) {
+            throw new IllegalStateException(
+                String.format("Sequence exceeded maximum value: %d (max: %d)", 
+                    sequence, MAX_SEQUENCE_VALUE));
+        }
     }
     
     private Long performAtomicIncrement(String key) {
