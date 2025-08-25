@@ -3,7 +3,10 @@ package com.kakaobank.numbering.service;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 
 @Service
 public class SequenceService {
@@ -24,7 +27,17 @@ public class SequenceService {
         
         validateSequenceRange(sequence);
         
+        if (sequence == 1L) {
+            setDailyExpiration(key);
+        }
+        
         return sequence;
+    }
+    
+    private void setDailyExpiration(String key) {
+        LocalDateTime tomorrow = LocalDate.now().plusDays(1).atStartOfDay();
+        Duration ttl = Duration.between(LocalDateTime.now(), tomorrow);
+        redisTemplate.expire(key, ttl);
     }
     
     private void validateSequenceRange(Long sequence) {
