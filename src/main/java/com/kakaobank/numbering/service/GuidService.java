@@ -27,7 +27,12 @@ public class GuidService {
         // Counter (4 digits) with automatic overflow handling
         String counterStr = generateCounter();
         
-        return timestamp + serverId + processId + counterStr;
+        String guid = timestamp + serverId + processId + counterStr;
+        
+        // Validate GUID format (30 characters)
+        validateGuidFormat(guid);
+        
+        return guid;
     }
     
     private String generateTimestamp() {
@@ -54,5 +59,12 @@ public class GuidService {
     private String generateCounter() {
         int count = counter.getAndUpdate(current -> (current + 1) % MAX_COUNTER);
         return String.format("%04d", count);
+    }
+    
+    private void validateGuidFormat(String guid) {
+        if (guid == null || guid.length() != 30) {
+            throw new IllegalStateException("Invalid GUID format: expected 30 characters, got " + 
+                (guid == null ? "null" : guid.length()));
+        }
     }
 }
