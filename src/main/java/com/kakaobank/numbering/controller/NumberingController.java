@@ -7,6 +7,7 @@ import com.kakaobank.numbering.service.SequenceService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/v1")
 public class NumberingController {
     
     private final GuidService guidService;
@@ -29,7 +30,7 @@ public class NumberingController {
         return new SequenceResponse(value);
     }
     
-    @GetMapping("/sequence")
+    @GetMapping("/sequence/current")
     public SequenceResponse getCurrentSequence() {
         Long value = sequenceService.getCurrentSequence();
         return new SequenceResponse(value);
