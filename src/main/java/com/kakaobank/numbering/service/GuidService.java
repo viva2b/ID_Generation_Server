@@ -1,5 +1,7 @@
 package com.kakaobank.numbering.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -8,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class GuidService {
     
+    private static final Logger log = LoggerFactory.getLogger(GuidService.class);
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
     private static final String DEFAULT_SERVER_ID = "SV01";
     private static final int MAX_COUNTER = 10000;
@@ -18,6 +21,7 @@ public class GuidService {
     public GuidService() {
         this.serverId = initializeServerId();
         this.processId = initializeProcessId();
+        log.info("GuidService initialized - ServerId: {}, ProcessId: {}", serverId, processId);
     }
     
     public String generateGuid() {
@@ -32,6 +36,7 @@ public class GuidService {
         // Validate GUID format (30 characters)
         validateGuidFormat(guid);
         
+        log.debug("Generated GUID: {}", guid);
         return guid;
     }
     
