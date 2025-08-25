@@ -45,6 +45,9 @@ public class SequenceService {
         } catch (RedisConnectionFailureException e) {
             log.error("Redis connection failed while generating sequence", e);
             throw new RedisOperationException("Unable to generate sequence: Redis connection failed", e);
+        } catch (SequenceGenerationException e) {
+            log.error("Sequence generation failed", e);
+            throw e;
         } catch (Exception e) {
             log.error("Unexpected error while generating sequence", e);
             throw new SequenceGenerationException("Unable to generate sequence", e);
